@@ -23,6 +23,8 @@ jobs:
           - python312
           - python313
 
+    name: "${{ matrix.package }} (${{ matrix.os.arch }}"
+
     container:
       image: ghcr.io/pkgforge-dev/archlinux:latest
     env:

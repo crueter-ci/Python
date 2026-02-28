@@ -40,7 +40,7 @@ git clone https://aur.archlinux.org/"$1".git
 
 cd "$1"
 
-makepkg -s
+makepkg -s --noconfirm
 
 mkdir artifacts
 mv *.pkg.tar* artifacts
