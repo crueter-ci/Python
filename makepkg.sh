@@ -40,6 +40,14 @@ git clone https://aur.archlinux.org/"$1".git
 
 cd "$1"
 
+# awesome
+if ! grep -q "arch=.*$ARCH" PKGBUILD; then
+	sed -i -e "s|x86_64|$ARCH|" PKGBUILD
+fi
+
+# always build without debug info
+sed -i -e 's|-g1|-g0|' PKGBUILD
+
 makepkg -s --noconfirm
 
 mkdir artifacts
