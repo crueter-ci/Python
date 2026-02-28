@@ -50,8 +50,8 @@ sed -i -e 's|-g1|-g0|' PKGBUILD
 
 makepkg -s --noconfirm
 
-mkdir artifacts
+mkdir ../artifacts
 rm *debug*
-mv *.pkg.tar* artifacts
+mv *.pkg.tar* ../artifacts
 
-ls -lh artifacts
+ls -lh ../artifacts
