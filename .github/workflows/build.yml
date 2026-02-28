@@ -1,0 +1,80 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      # Fail-fast: false ensures one failing build doesn't stop the others
+      fail-fast: false
+      matrix:
+        os:
+          - arch: x86_64
+            runs-on: ubuntu-24.04
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+
+        package:
+          - python310
+          - python311
+          - python312
+          - python313
+
+    container:
+      image: ghcr.io/pkgforge-dev/archlinux:latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: time_macros
+
+    runs-on: ${{ matrix.os.runs-on }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: crueter/ccache-action@master
+        with:
+          key: ${{ matrix.os.arch }}-${{ matrix.package }}
+          install: binary
+
+      - name: build
+        run: |
+          chmod +x makepkg.sh
+          ./makepkg.sh "${{ matrix.package }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          archive: false
+          path: artifacts/*
+          name: ${{ matrix.os.arch }}-${{ matrix.package }}
+
+  release:
+    name: "release"
+    needs: [build]
+    permissions:
+      actions: read
+      security-events: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*"
+          merge-multiple: true
+
+      - name: release
+        uses: softprops/action-gh-release@v2.3.3
+        with:
+          name: "Continuous build"
+          tag_name: continuous
+          prerelease: false
+          make_latest: true
+          target_commitish: ${{ github.sha }}
+          files: |
+            *.pkg.tar.zst
+            *.pkg.tar.xz
